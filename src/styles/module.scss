@@ -1,16 +1,54 @@
-.window-app .window-content section.module-dog-picture-container {
-  flex: 100;
-  display: flex;
-  justify-content: center;
-  align-content: center;
-  margin-top: 10px;
+/* Маркер внутри контента: он лишь указывает "это emm-сообщение" */
+.cc-emm {
+  display: contents;
+}
 
-  .module-dog-placeholder {
-    font-size: 200px;
-  }
+/* ВЕСЬ элемент сообщения (фон, рамка и т.д.) */
+li.chat-message.cc-emm-message {
+  background: #ff8c00 !important; /* оранжевый фон целиком */
+  border-color: #ff8c00 !important;
+}
 
-  img.module-dog-image {
-    object-fit: contain;
-    border: none;
-  }
+/* Содержимое: чёрный жирный курсив */
+li.chat-message.cc-emm-message .message-content {
+  color: #000 !important;
+  font-weight: bold;
+  font-style: italic;
+}
+
+/* Скрываем автора, заголовок, аватарку, метаданные — как у /desc */
+li.chat-message.cc-emm-no-author > header,
+li.chat-message.cc-emm-no-author .message-header,
+li.chat-message.cc-emm-no-author .message-sender,
+li.chat-message.cc-emm-no-author .message-portrait,
+li.chat-message.cc-emm-no-author .message-metadata {
+  display: none !important;
+}
+
+/* Убираем левый отступ под аватар — чтобы контент был на всю ширину */
+li.chat-message.cc-emm-no-author .message-content {
+  margin-left: 0 !important;
+  padding: 0.25rem 0.5rem;  /* немного внутреннего отступа, как у блока */
+  border-radius: 0.25rem;
+}
+
+/* Дополнительный страховочный вариант для движков с поддержкой :has() */
+li.chat-message:has(.cc-emm) {
+  background: #ff8c00 !important;
+  border-color: #ff8c00 !important;
+}
+li.chat-message:has(.cc-emm) .message-content {
+  color: #000 !important;
+  font-weight: bold;
+  font-style: italic;
+}
+li.chat-message:has(.cc-emm) > header,
+li.chat-message:has(.cc-emm) .message-header,
+li.chat-message:has(.cc-emm) .message-sender,
+li.chat-message:has(.cc-emm) .message-portrait,
+li.chat-message:has(.cc-emm) .message-metadata {
+  display: none !important;
+}
+li.chat-message:has(.cc-emm) .message-content {
+  margin-left: 0 !important;
 }

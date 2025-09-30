@@ -1,10 +1,16 @@
 {
-  "TODO-MODULE-ID": {
-    "dog-app": {
-      "dog-browser": "Dog browser",
-      "dogs": "Dogs",
-      "fetch-random-dog": "Fetch random dog photo",
-      "random-dog-alt": "Image of a random dog"
+  "COMFORT-CHAT": {
+    "settings": {
+      "debug": {
+        "name": "Enable debug logging",
+        "hint": "Log verbose information for Comfort Chat while developing."
+      }
+    },
+    "commands": {
+      "emm": {
+        "description": "Post an orange highlighted emote as {character} {message}"
+      }
     }
   }
 }
+

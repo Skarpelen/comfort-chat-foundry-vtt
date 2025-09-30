@@ -1,35 +1,20 @@
-import * as dogBrowserApp from "./apps/dog_browser";
-import { HookDefinitions } from "fvtt-hook-attacher";
+import * as emmFeature from "./features/emm";
 
 /**
- * Interface for the todo-module-title module, extending Foundry's Module interface.
+ * Interface for the Comfort Chat module, extending Foundry's Module interface.
  */
-export interface TodoMyModule
-
-  extends foundry.packages.Module, dogBrowserApp.DogBrowserHandle {
-
-}
+export interface ComfortChat extends foundry.packages.Module {}
 
 /**
  * Callback type for module initialization.
  */
-export type OnInitModuleFunc = (module: TodoMyModule) => void;
+export type OnInitModuleFunc = (module: ComfortChat) => void;
 
 /**
- * Contains static properties for module hooks, libWrapper patches, and hook definitions.
+ * Точки расширения модуля: коллбеки и т.д.
  */
-export class TodoMyModuleHooks {
-  /**
-   * Iterable of callbacks to be called on module initialization.
-   */
+export class ComfortChatHooks {
   static ON_INIT_MODULE_CALLBACKS: Iterable<OnInitModuleFunc> = [
-    dogBrowserApp.onInitHandle,
+    emmFeature.onInitHandle
   ];
-
-  /**
-   * Set of hook definitions to be attached.
-   */
-  static HOOKS_DEFINITIONS_SET: Iterable<HookDefinitions> = [
-    ...dogBrowserApp.HOOKS_DEFINITIONS,
-  ]
 }

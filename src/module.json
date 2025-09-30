@@ -1,11 +1,17 @@
 {
-  "id": "todo-module-id",
-  "title": "todo-module-title",
-  "description": "todo-module-description",
+  "id": "comfort-chat",
+  "title": "Comfort Chat",
+  "description": "Comfort chat features for one amazing gaymale VOZHD",
   "version": "0.0.1",
   "packs": [],
   "system": [],
-  "dependencies": [],
+  "dependencies": [
+    {
+      "name": "_chatcommands",
+      "type": "module",
+      "manifest": "https://github.com/League-of-Foundry-Developers/Chat-Commands-Lib/releases/download/1.2.0/module.json"
+    }
+  ],
   "scripts": [],
   "compatibility": {
     "minimum": "13",
@@ -13,8 +19,8 @@
   },
   "authors": [
     {
-      "name": "todo-module-author-name",
-      "email": "todo-module-author-email",
+      "name": "Skarpelen",
+      "email": "onamenyabesit@gmail.com",
       "flags": {}
     }
   ],

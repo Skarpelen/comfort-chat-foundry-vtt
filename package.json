@@ -1,7 +1,7 @@
 {
-  "name": "todo-module-id",
+  "name": "comfort-chat",
   "version": "1.0.0",
-  "description": "todo-module-description",
+  "description": "Comfort chat features for one amazing gaymale VOZHD",
   "private": true,
   "scripts": {
     "build": "tsc && vite build",
