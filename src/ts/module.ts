@@ -6,6 +6,7 @@ import { MODULE_ID } from "./constants";
 import { ComfortChat as Module, ComfortChatHooks as ModuleHooks } from "./types";
 import { Settings } from "./settings";
 import { info, debug } from "./log";
+import { HooksAttacher } from "fvtt-hook-attacher";
 
 let module: Module;
 
@@ -24,6 +25,8 @@ Hooks.once("init", () => {
     }
   }
 
+  HooksAttacher.attachHooks(ModuleHooks.HOOKS_DEFINITIONS_SET);
+  
   info("comfort-chat initialized");
 });
 

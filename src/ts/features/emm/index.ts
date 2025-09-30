@@ -1,4 +1,5 @@
 import { debug, info, warn, error } from "../../log";
+import type { HookDefinitions } from "fvtt-hook-attacher";
 
 export function onInitHandle(_module: foundry.packages.Module): void {
   debug("EMM feature initializing");
@@ -9,7 +10,7 @@ export function onInitHandle(_module: foundry.packages.Module): void {
       const register = (commandKey: string) => {
         const cmd = chatCommands.createCommandFromData({
           commandKey,
-          description: "Orange emote message",
+          description: "Сообщение-описание действия как в Roll20",
           iconClass: "fa-bullhorn",
           shouldDisplayToChat: true,
           invokeOnCommand: (_chatLog: ChatLog, messageText: string, chatData: any) => {
@@ -26,56 +27,66 @@ export function onInitHandle(_module: foundry.packages.Module): void {
 
         try { register("/em"); } catch (e) { warn("Could not register /em (might already exist)", e); }
         try { register("/me"); } catch (e) { warn("Could not register /me (might already exist)", e); }
+        try { register("/emote"); } catch (e) { warn("Could not register /me (might already exist)", e); }
     } catch (e) {
       warn("Failed to register commands with Chat Commands library", e);
     }
   });
+}
+  
+export const HOOKS_DEFINITIONS = [
+  {
+    hook: "chatMessage",
+    once: false,
+    fn: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
+      const trimmed = messageText?.trim() ?? "";
 
-  Hooks.on("chatMessage", (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
-    const trimmed = messageText?.trim() ?? "";
+      const commands: string[] = ["/emm", "/em", "/me", "/emote"];
 
-    const commands: string[] = ["/emm", "/em", "/me", "/emote"];
+      const match = commands.find((k) => trimmed.toLowerCase().startsWith(k + " "));
+      const exact = commands.includes(trimmed.toLowerCase()) ? trimmed.toLowerCase() : match;
 
-    const match = commands.find((k) => trimmed.toLowerCase().startsWith(k + " "));
-    const exact = commands.includes(trimmed.toLowerCase()) ? trimmed.toLowerCase() : match;
+      if (!exact) {
+        return;
+      }
 
-    if (!exact) {
-      return;
-    }
+      const text = trimmed.slice(exact.length).trim();
+      debug(`Invoked ${exact} via chatMessage`, { text });
 
-    const text = trimmed.slice(exact.length).trim();
-    debug(`Invoked ${exact} via chatMessage`, { text });
+      if (!text) {
+        ui.notifications?.warn(`Please provide a message after ${exact}`);
+        return false;
+      }
 
-    if (!text) {
-      ui.notifications?.warn(`Please provide a message after ${exact}`);
+      try {
+        const html = formatEmm(text, chatData);
+        ChatMessage.create({
+          content: html,
+          speaker: chatData?.speaker
+        });
+        debug("ChatMessage created");
+      } catch (e) {
+        error("Failed to create ChatMessage", e);
+      }
+
       return false;
     }
-
-    try {
-      const html = formatEmm(text, chatData);
-      ChatMessage.create({
-        content: html,
-        speaker: chatData?.speaker
-      });
-      debug("ChatMessage created");
-    } catch (e) {
-      error("Failed to create ChatMessage", e);
-    }
-
-    return false;
-  });
-
-  Hooks.on("renderChatMessage", (_message: any, html: any) => {
-    try {
-      const root = html?.[0] as HTMLElement | undefined;
-      if (root?.querySelector?.(".cc-emm")) {
-        html.addClass("cc-emm-message cc-emm-no-author");
+  },
+  {
+    hook: "renderChatMessage",
+    once: false,
+    fn: (_message: any, html: any): void => {
+      try {
+        const root = html?.[0] as HTMLElement | undefined;
+        if (root?.querySelector?.(".cc-emm")) {
+          html.addClass("cc-emm-message cc-emm-no-author");
+        }
+      } catch (e) {
+        warn("renderChatMessage styling failed", e);
       }
-    } catch (e) {
-      warn("renderChatMessage styling failed", e);
     }
-  });
-}
+  }
+] as unknown as HookDefinitions;
 
 function escapeHtml(input: string): string {
   return input

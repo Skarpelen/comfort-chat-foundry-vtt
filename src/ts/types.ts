@@ -1,3 +1,4 @@
+import { HookDefinitions } from "fvtt-hook-attacher";
 import * as emmFeature from "./features/emm";
 
 /**
@@ -16,5 +17,9 @@ export type OnInitModuleFunc = (module: ComfortChat) => void;
 export class ComfortChatHooks {
   static ON_INIT_MODULE_CALLBACKS: Iterable<OnInitModuleFunc> = [
     emmFeature.onInitHandle
+  ];
+
+  static HOOKS_DEFINITIONS_SET: Iterable<HookDefinitions> = [
+    emmFeature.HOOKS_DEFINITIONS
   ];
 }
