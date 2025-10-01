@@ -26,7 +26,7 @@ Hooks.once("init", () => {
   }
 
   HooksAttacher.attachHooks(ModuleHooks.HOOKS_DEFINITIONS_SET);
-  
+
   info("comfort-chat initialized");
 });
 

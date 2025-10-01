@@ -1,0 +1,25 @@
+{
+  "COMFORT-CHAT": {
+    "module": {
+      "title": "Comfort Chat",
+      "description": "Функции удобного чата для одного потрясающего геймастера VOZHD"
+    },
+    "settings": {
+      "debug": {
+        "name": "Включить отладочное логирование",
+        "hint": "Записывать подробную информацию для Comfort Chat во время разработки."
+      }
+    },
+    "commands": {
+      "emm": {
+        "description": "Сообщение действия в стиле Roll20"
+      }
+    },
+    "notifications": {
+      "needText": "Пожалуйста, укажите текст после {command}"
+    },
+    "fallback": {
+      "someone": "Кто-то"
+    }
+  }
+}

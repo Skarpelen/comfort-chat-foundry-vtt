@@ -1,5 +1,9 @@
 {
   "COMFORT-CHAT": {
+    "module": {
+      "title": "Comfort Chat",
+      "description": "Comfort chat features for one amazing gaymale VOZHD"
+    },
     "settings": {
       "debug": {
         "name": "Enable debug logging",
@@ -8,9 +12,14 @@
     },
     "commands": {
       "emm": {
-        "description": "Post an orange highlighted emote as {character} {message}"
+        "description": "Roll20 style action message"
       }
+    },
+    "notifications": {
+      "needText": "Please provide a message after {command}"
+    },
+    "fallback": {
+      "someone": "Someone"
     }
   }
 }
-

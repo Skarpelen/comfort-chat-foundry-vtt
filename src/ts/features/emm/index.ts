@@ -7,10 +7,14 @@ export function onInitHandle(_module: foundry.packages.Module): void {
   (Hooks as any).on("chatCommandsReady", (chatCommands: any) => {
     try {
       debug("chatCommandsReady fired — registering /emm");
+
+      const i18n = (game as any)?.i18n;
+      const descTmpl = i18n?.localize?.("COMFORT-CHAT.commands.emm.description") ?? "Post an emote";
+
       const register = (commandKey: string) => {
         const cmd = chatCommands.createCommandFromData({
           commandKey,
-          description: "Сообщение-описание действия как в Roll20",
+          description: descTmpl,
           iconClass: "fa-bullhorn",
           shouldDisplayToChat: true,
           invokeOnCommand: (_chatLog: ChatLog, messageText: string, chatData: any) => {
@@ -25,15 +29,16 @@ export function onInitHandle(_module: foundry.packages.Module): void {
 
       register("/emm");
 
-        try { register("/em"); } catch (e) { warn("Could not register /em (might already exist)", e); }
-        try { register("/me"); } catch (e) { warn("Could not register /me (might already exist)", e); }
-        try { register("/emote"); } catch (e) { warn("Could not register /me (might already exist)", e); }
+      try { register("/em"); } catch (e) { warn("Could not register /em (might already exist)", e); }
+      try { register("/me"); } catch (e) { warn("Could not register /me (might already exist)", e); }
+      try { register("/emote"); } catch (e) { warn("Could not register /emote (might already exist)", e); }
+
     } catch (e) {
       warn("Failed to register commands with Chat Commands library", e);
     }
   });
 }
-  
+
 export const HOOKS_DEFINITIONS = [
   {
     hook: "chatMessage",
@@ -54,7 +59,11 @@ export const HOOKS_DEFINITIONS = [
       debug(`Invoked ${exact} via chatMessage`, { text });
 
       if (!text) {
-        ui.notifications?.warn(`Please provide a message after ${exact}`);
+        const i18n = (game as any)?.i18n;
+        const msg =
+          i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: exact }) ??
+          `Please provide a message after ${exact}`;
+        ui.notifications?.warn(msg);
         return false;
       }
 
@@ -98,7 +107,13 @@ function escapeHtml(input: string): string {
 }
 
 function formatEmm(messageText: string, chatData: any): string {
-  const name = chatData?.speaker?.alias ?? (game as any)?.user?.name ?? "Someone";
+  const g: any = game;
+  const i18n = g?.i18n;
+  const fallback =
+    i18n?.localize?.("COMFORT-CHAT.fallback.someone") ??
+    "Someone";
+
+  const name = chatData?.speaker?.alias ?? g?.user?.name ?? fallback;
   const safeName = escapeHtml(String(name));
   const safeText = escapeHtml(String(messageText));
 

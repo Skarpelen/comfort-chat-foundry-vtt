@@ -21,7 +21,8 @@
     {
       "name": "Skarpelen",
       "email": "onamenyabesit@gmail.com",
-      "flags": {}
+      "url": "https://github.com/Skarpelen",
+      "discord": "skarpelen"
     }
   ],
   "flags": {
@@ -32,6 +33,11 @@
       "lang": "en",
       "name": "English",
       "path": "lang/en.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
     }
   ],
   "styles": [
