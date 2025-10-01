@@ -3,8 +3,8 @@
   "title": "Comfort Chat",
   "description": "Comfort chat features for one amazing gaymale VOZHD",
   "version": "0.0.1",
-  "packs": [],
-  "system": [],
+  "manifest": "https://github.com/<user>/<repo>/releases/latest/download/module.json",
+  "download": "https://github.com/<user>/<repo>/releases/download/v0.0.1/module.zip",
   "dependencies": [
     {
       "name": "_chatcommands",
