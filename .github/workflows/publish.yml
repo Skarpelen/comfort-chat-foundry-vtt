@@ -37,10 +37,25 @@ jobs:
 
       - name: Patch module.json (manifest, download, version, relationships)
         run: |
+          set -euo pipefail
           repo="${{ github.repository }}"
           tag="${{ github.event.release.tag_name }}"
           ver="${{ steps.get_version.outputs.version-without-v }}"
-          mkdir -p dist
+
+          in_file=""
+          if [ -f dist/module.json ]; then
+            in_file="dist/module.json"
+          elif [ -f module.json ]; then
+            in_file="module.json"
+          else
+            echo "module.json not found in repo root or dist/"
+            echo "Found potential candidates:"
+            find . -maxdepth 3 -name module.json || true
+            exit 1
+          fi
+
+          echo "Patching $in_file -> dist/module.json"
+          tmp="$(mktemp)"
           jq --arg repo "$repo" --arg tag "$tag" --arg ver "$ver" '
             .version = $ver
             | .manifest = "https://github.com/\($repo)/releases/latest/download/module.json"
@@ -54,7 +69,18 @@ jobs:
                   )
               )
             | del(.dependencies)
-          ' module.json > dist/module.json
+          ' "$in_file" > "$tmp"
+
+          mkdir -p dist
+          mv "$tmp" dist/module.json
+
+      - name: Sanity check version and links
+        run: |
+          ver='${{ steps.get_version.outputs.version-without-v }}'
+          tag='${{ github.event.release.tag_name }}'
+          test "$(jq -r .version dist/module.json)" = "$ver"
+          grep -q "releases/download/$tag/module.zip" dist/module.json
+          echo "OK: module.json patched for $tag ($ver)"
 
       - name: Create zip archive
         working-directory: dist
