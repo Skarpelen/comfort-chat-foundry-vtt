@@ -12,60 +12,96 @@ type ParsedChatBlock =
 
 export function onInitHandle(_module: foundry.packages.Module): void {
   debug("EMM feature initializing");
-}
 
-export const HOOKS_DEFINITIONS = [
-  {
-    hook: "chatMessage",
-    once: false,
-    fn: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
-      const parsed = parseComfortChatInput(messageText);
+  (Hooks as any).on("chatCommandsReady", (chatCommands: any) => {
+    const i18n = (game as any)?.i18n;
+    const descTmpl = i18n?.localize?.("COMFORT-CHAT.commands.emm.description") ?? "Post an emote";
 
-      if (!parsed.shouldHandle) {
-        return;
-      }
+    const register = (commandKey: string): void => {
+      const cmd = chatCommands.createCommandFromData({
+        commandKey,
+        description: descTmpl,
+        iconClass: "fa-bullhorn",
+        shouldDisplayToChat: false,
+        invokeOnCommand: (_chatLog: ChatLog, messageText: string, chatData: any) => {
+          const fullText = `${commandKey} ${messageText ?? ""}`;
+          const parsed = parseComfortChatInput(fullText);
 
-      if (parsed.emptyCommand) {
-        const i18n = (game as any)?.i18n;
-        const msg =
-          i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: parsed.emptyCommand }) ??
-          `Please provide a message after ${parsed.emptyCommand}`;
-        ui.notifications?.warn(msg);
-        return false;
-      }
+          if (parsed.emptyCommand) {
+            ui.notifications?.warn(`Please provide a message after ${parsed.emptyCommand}`);
+            return "";
+          }
 
-      void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
-        error("Failed to create comfort chat messages", e);
+          void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+            error("Failed to create comfort chat messages", e);
+          });
+
+          return "";
+        }
       });
 
-      return false;
-    }
-  },
-  {
-    hook: "renderChatMessage",
-    once: false,
-    fn: (message: any, html: any): void => {
-      try {
-        const root = html?.[0] as HTMLElement | undefined;
-        const isEmm =
-          message?.getFlag?.(MODULE_ID, "emm") === true ||
-          root?.querySelector?.(".cc-emm") != null;
+      chatCommands.registerCommand(cmd);
+    };
 
-        if (isEmm) {
-          html.addClass("cc-emm-message cc-emm-no-author");
+    register("/emm");
+    register("/em");
+    register("/me");
+    register("/emote");
+  });
+}
+
+export const HOOKS_DEFINITIONS: HookDefinitions = {
+  on: [
+    {
+      name: "chatMessage" as Hooks.HookName,
+      callback: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
+        const parsed = parseComfortChatInput(messageText);
+
+        if (!parsed.shouldHandle) {
           return;
         }
 
-        const previous = root?.previousElementSibling as HTMLElement | null;
-        if (previous?.classList.contains("cc-emm-message")) {
-          root?.classList.remove("same-sender", "message-same-sender", "continued", "compact");
+        if (parsed.emptyCommand) {
+          const i18n = (game as any)?.i18n;
+          const msg =
+            i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: parsed.emptyCommand }) ??
+            `Please provide a message after ${parsed.emptyCommand}`;
+          ui.notifications?.warn(msg);
+          return false;
         }
-      } catch (e) {
-        error("renderChatMessage styling failed", e);
+
+        void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+          error("Failed to create comfort chat messages", e);
+        });
+
+        return false;
+      }
+    },
+    {
+      name: "renderChatMessage" as Hooks.HookName,
+      callback: (message: any, html: any): void => {
+        try {
+          const root = html?.[0] as HTMLElement | undefined;
+          const isEmm =
+            message?.getFlag?.(MODULE_ID, "emm") === true ||
+            root?.querySelector?.(".cc-emm") != null;
+
+          if (isEmm) {
+            html.addClass("cc-emm-message cc-emm-no-author");
+            return;
+          }
+
+          const previous = root?.previousElementSibling as HTMLElement | null;
+          if (previous?.classList.contains("cc-emm-message")) {
+            root?.classList.remove("same-sender", "message-same-sender", "continued", "compact");
+          }
+        } catch (e) {
+          error("renderChatMessage styling failed", e);
+        }
       }
     }
-  }
-] as unknown as HookDefinitions;
+  ]
+};
 
 function escapeHtml(input: string): string {
   return input
