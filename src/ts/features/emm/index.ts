@@ -1,42 +1,17 @@
-import { debug, info, warn, error } from "../../log";
+import { debug, error } from "../../log";
+import { MODULE_ID } from "../../constants";
 import type { HookDefinitions } from "fvtt-hook-attacher";
+
+const EMM_COMMANDS: string[] = ["/emm", "/em", "/me", "/emote"];
+const DESC_COMMAND = "/desc";
+const EMPTY_LINE_SEPARATOR = /\r?\n[ \t]*\r?\n+/;
+
+type ParsedChatBlock =
+  | { kind: "plain"; text: string }
+  | { kind: "emm"; text: string };
 
 export function onInitHandle(_module: foundry.packages.Module): void {
   debug("EMM feature initializing");
-
-  (Hooks as any).on("chatCommandsReady", (chatCommands: any) => {
-    try {
-      debug("chatCommandsReady fired — registering /emm");
-
-      const i18n = (game as any)?.i18n;
-      const descTmpl = i18n?.localize?.("COMFORT-CHAT.commands.emm.description") ?? "Post an emote";
-
-      const register = (commandKey: string) => {
-        const cmd = chatCommands.createCommandFromData({
-          commandKey,
-          description: descTmpl,
-          iconClass: "fa-bullhorn",
-          shouldDisplayToChat: true,
-          invokeOnCommand: (_chatLog: ChatLog, messageText: string, chatData: any) => {
-            debug(`Invoked ${commandKey} via ChatCommandsLib`, { messageText });
-            const html = formatEmm(messageText, chatData);
-            return html;
-          }
-        });
-        chatCommands.registerCommand(cmd);
-        info(`Registered ${commandKey} with Chat Commands library`);
-      };
-
-      register("/emm");
-
-      try { register("/em"); } catch (e) { warn("Could not register /em (might already exist)", e); }
-      try { register("/me"); } catch (e) { warn("Could not register /me (might already exist)", e); }
-      try { register("/emote"); } catch (e) { warn("Could not register /emote (might already exist)", e); }
-
-    } catch (e) {
-      warn("Failed to register commands with Chat Commands library", e);
-    }
-  });
 }
 
 export const HOOKS_DEFINITIONS = [
@@ -44,39 +19,24 @@ export const HOOKS_DEFINITIONS = [
     hook: "chatMessage",
     once: false,
     fn: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
-      const trimmed = messageText?.trim() ?? "";
+      const parsed = parseComfortChatInput(messageText);
 
-      const commands: string[] = ["/emm", "/em", "/me", "/emote"];
-
-      const match = commands.find((k) => trimmed.toLowerCase().startsWith(k + " "));
-      const exact = commands.includes(trimmed.toLowerCase()) ? trimmed.toLowerCase() : match;
-
-      if (!exact) {
+      if (!parsed.shouldHandle) {
         return;
       }
 
-      const text = trimmed.slice(exact.length).trim();
-      debug(`Invoked ${exact} via chatMessage`, { text });
-
-      if (!text) {
+      if (parsed.emptyCommand) {
         const i18n = (game as any)?.i18n;
         const msg =
-          i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: exact }) ??
-          `Please provide a message after ${exact}`;
+          i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: parsed.emptyCommand }) ??
+          `Please provide a message after ${parsed.emptyCommand}`;
         ui.notifications?.warn(msg);
         return false;
       }
 
-      try {
-        const html = formatEmm(text, chatData);
-        ChatMessage.create({
-          content: html,
-          speaker: chatData?.speaker
-        });
-        debug("ChatMessage created");
-      } catch (e) {
-        error("Failed to create ChatMessage", e);
-      }
+      void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+        error("Failed to create comfort chat messages", e);
+      });
 
       return false;
     }
@@ -84,14 +44,24 @@ export const HOOKS_DEFINITIONS = [
   {
     hook: "renderChatMessage",
     once: false,
-    fn: (_message: any, html: any): void => {
+    fn: (message: any, html: any): void => {
       try {
         const root = html?.[0] as HTMLElement | undefined;
-        if (root?.querySelector?.(".cc-emm")) {
+        const isEmm =
+          message?.getFlag?.(MODULE_ID, "emm") === true ||
+          root?.querySelector?.(".cc-emm") != null;
+
+        if (isEmm) {
           html.addClass("cc-emm-message cc-emm-no-author");
+          return;
+        }
+
+        const previous = root?.previousElementSibling as HTMLElement | null;
+        if (previous?.classList.contains("cc-emm-message")) {
+          root?.classList.remove("same-sender", "message-same-sender", "continued", "compact");
         }
       } catch (e) {
-        warn("renderChatMessage styling failed", e);
+        error("renderChatMessage styling failed", e);
       }
     }
   }
@@ -106,6 +76,106 @@ function escapeHtml(input: string): string {
     .replaceAll("'", "&#039;");
 }
 
+function parseComfortChatInput(messageText: string): {
+  shouldHandle: boolean;
+  blocks: ParsedChatBlock[];
+  emptyCommand?: string;
+} {
+  const source = messageText ?? "";
+  const firstLine = source.trimStart().toLowerCase();
+
+  if (firstLine === DESC_COMMAND || firstLine.startsWith(`${DESC_COMMAND} `)) {
+    return { shouldHandle: false, blocks: [] };
+  }
+
+  const rawBlocks = source
+    .split(EMPTY_LINE_SEPARATOR)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0);
+
+  const hasEmmBlock = rawBlocks.some((block) => findEmmCommand(block) != null);
+
+  if (!hasEmmBlock) {
+    return { shouldHandle: false, blocks: [] };
+  }
+
+  const blocks: ParsedChatBlock[] = [];
+
+  for (const rawBlock of rawBlocks) {
+    const command = findEmmCommand(rawBlock);
+
+    if (!command) {
+      blocks.push({ kind: "plain", text: rawBlock });
+      continue;
+    }
+
+    const text = rawBlock.slice(command.length).trim();
+
+    if (!text) {
+      return { shouldHandle: true, blocks: [], emptyCommand: command };
+    }
+
+    const previous = blocks[blocks.length - 1];
+
+    if (previous?.kind === "emm") {
+      previous.text = `${previous.text}\n\n${text}`;
+    } else {
+      blocks.push({ kind: "emm", text });
+    }
+  }
+
+  return { shouldHandle: true, blocks };
+}
+
+function findEmmCommand(text: string): string | undefined {
+  const trimmed = text.trimStart().toLowerCase();
+
+  return EMM_COMMANDS.find((command) =>
+    trimmed === command || trimmed.startsWith(`${command} `)
+  );
+}
+
+async function createComfortChatMessages(blocks: ParsedChatBlock[], chatData: any): Promise<void> {
+  for (const block of blocks) {
+    if (block.kind === "plain") {
+      await ChatMessage.create({
+        ...chatData,
+        content: block.text,
+        speaker: chatData?.speaker
+      });
+      continue;
+    }
+
+    await ChatMessage.create({
+      ...chatData,
+      content: formatEmm(block.text, chatData),
+      speaker: createTechnicalEmmSpeaker(chatData),
+      flags: createEmmFlags(chatData)
+    });
+  }
+}
+
+function createTechnicalEmmSpeaker(chatData: any): any {
+  const speaker = { ...(chatData?.speaker ?? {}) };
+  const randomId = (foundry as any)?.utils?.randomID?.() ?? String(Date.now());
+
+  speaker.alias = `cc-emm-${randomId}`;
+  delete speaker.actor;
+  delete speaker.token;
+
+  return speaker;
+}
+
+function createEmmFlags(chatData: any): Record<string, unknown> {
+  return {
+    ...(chatData?.flags ?? {}),
+    [MODULE_ID]: {
+      ...(chatData?.flags?.[MODULE_ID] ?? {}),
+      emm: true
+    }
+  };
+}
+
 function formatEmm(messageText: string, chatData: any): string {
   const g: any = game;
   const i18n = g?.i18n;
@@ -115,7 +185,7 @@ function formatEmm(messageText: string, chatData: any): string {
 
   const name = chatData?.speaker?.alias ?? g?.user?.name ?? fallback;
   const safeName = escapeHtml(String(name));
-  const safeText = escapeHtml(String(messageText));
+  const safeText = escapeHtml(String(messageText)).replace(/\r?\n/g, "<br>");
 
   return `<div class="cc-emm"><em><strong>${safeName} ${safeText}</strong></em></div>`;
 }
