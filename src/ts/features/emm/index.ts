@@ -264,11 +264,9 @@ function forceAuthorBlockVisible(root: HTMLElement): void {
   ];
 
   for (const selector of selectors) {
-    const elements = root.querySelectorAll<HTMLElement>(selector);
-
-    for (const element of elements) {
+    root.querySelectorAll<HTMLElement>(selector).forEach((element) => {
       element.style.removeProperty("display");
       element.style.removeProperty("visibility");
-    }
+    });
   }
 }
