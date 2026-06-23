@@ -54,6 +54,31 @@ export const HOOKS_DEFINITIONS: HookDefinitions = {
   on: [
     {
       name: "chatMessage" as Hooks.HookName,
+      callback: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
+        const parsed = parseComfortChatInput(messageText);
+
+        if (!parsed.shouldHandle) {
+          return;
+        }
+
+        if (parsed.emptyCommand) {
+          const i18n = (game as any)?.i18n;
+          const msg =
+            i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: parsed.emptyCommand }) ??
+            `Please provide a message after ${parsed.emptyCommand}`;
+          ui.notifications?.warn(msg);
+          return false;
+        }
+
+        void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+          error("Failed to create comfort chat messages", e);
+        });
+
+        return false;
+      }
+    },
+    {
+      name: "renderChatMessage" as Hooks.HookName,
       callback: (message: any, html: any): void => {
         try {
           const root = getChatMessageRoot(html);
