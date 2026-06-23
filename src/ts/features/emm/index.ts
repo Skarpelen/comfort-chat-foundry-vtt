@@ -54,46 +54,37 @@ export const HOOKS_DEFINITIONS: HookDefinitions = {
   on: [
     {
       name: "chatMessage" as Hooks.HookName,
-      callback: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
-        const parsed = parseComfortChatInput(messageText);
-
-        if (!parsed.shouldHandle) {
-          return;
-        }
-
-        if (parsed.emptyCommand) {
-          const i18n = (game as any)?.i18n;
-          const msg =
-            i18n?.format?.("COMFORT-CHAT.notifications.needText", { command: parsed.emptyCommand }) ??
-            `Please provide a message after ${parsed.emptyCommand}`;
-          ui.notifications?.warn(msg);
-          return false;
-        }
-
-        void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
-          error("Failed to create comfort chat messages", e);
-        });
-
-        return false;
-      }
-    },
-    {
-      name: "renderChatMessage" as Hooks.HookName,
       callback: (message: any, html: any): void => {
         try {
-          const root = html?.[0] as HTMLElement | undefined;
-          const isEmm =
-            message?.getFlag?.(MODULE_ID, "emm") === true ||
-            root?.querySelector?.(".cc-emm") != null;
+          const root = getChatMessageRoot(html);
 
-          if (isEmm) {
-            html.addClass("cc-emm-message cc-emm-no-author");
+          if (!root) {
             return;
           }
 
-          const previous = root?.previousElementSibling as HTMLElement | null;
+          const isEmm =
+            message?.getFlag?.(MODULE_ID, "emm") === true ||
+            root.querySelector(".cc-emm") != null;
+
+          if (isEmm) {
+            root.classList.add("cc-emm-message", "cc-emm-no-author");
+            return;
+          }
+
+          const previous = root.previousElementSibling as HTMLElement | null;
+
           if (previous?.classList.contains("cc-emm-message")) {
-            root?.classList.remove("same-sender", "message-same-sender", "continued", "compact");
+            root.classList.add("cc-message-after-emm");
+
+            root.classList.remove(
+              "same-sender",
+              "message-same-sender",
+              "continued",
+              "compact",
+              "no-header"
+            );
+
+            forceAuthorBlockVisible(root);
           }
         } catch (e) {
           error("renderChatMessage styling failed", e);
@@ -224,4 +215,35 @@ function formatEmm(messageText: string, chatData: any): string {
   const safeText = escapeHtml(String(messageText)).replace(/\r?\n/g, "<br>");
 
   return `<div class="cc-emm"><em><strong>${safeName} ${safeText}</strong></em></div>`;
+}
+
+function getChatMessageRoot(html: any): HTMLElement | undefined {
+  if (html instanceof HTMLElement) {
+    return html;
+  }
+
+  if (html?.[0] instanceof HTMLElement) {
+    return html[0] as HTMLElement;
+  }
+
+  return undefined;
+}
+
+function forceAuthorBlockVisible(root: HTMLElement): void {
+  const selectors = [
+    ":scope > header",
+    ".message-header",
+    ".message-sender",
+    ".message-portrait",
+    ".message-metadata"
+  ];
+
+  for (const selector of selectors) {
+    const elements = root.querySelectorAll<HTMLElement>(selector);
+
+    for (const element of elements) {
+      element.style.removeProperty("display");
+      element.style.removeProperty("visibility");
+    }
+  }
 }

@@ -52,3 +52,20 @@ li.chat-message:has(.cc-emm) .message-metadata {
 li.chat-message:has(.cc-emm) .message-content {
   margin-left: 0 !important;
 }
+
+li.chat-message.cc-message-after-emm > header,
+li.chat-message.cc-message-after-emm .message-header {
+  display: flex !important;
+  visibility: visible !important;
+}
+
+li.chat-message.cc-message-after-emm .message-sender,
+li.chat-message.cc-message-after-emm .message-metadata {
+  display: inline !important;
+  visibility: visible !important;
+}
+
+li.chat-message.cc-message-after-emm .message-portrait {
+  display: block !important;
+  visibility: visible !important;
+}
