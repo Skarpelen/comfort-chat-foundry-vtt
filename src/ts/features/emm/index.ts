@@ -1,6 +1,7 @@
 import { debug, error } from "../../log";
 import { MODULE_ID } from "../../constants";
 import type { HookDefinitions } from "fvtt-hook-attacher";
+import { shouldTransformChatMessage, transformSpeech } from "../speech";
 
 const EMM_COMMANDS: string[] = ["/emm", "/em", "/me", "/emote"];
 const DESC_COMMAND = "/desc";
@@ -58,6 +59,18 @@ export const HOOKS_DEFINITIONS: HookDefinitions = {
         const parsed = parseComfortChatInput(messageText);
 
         if (!parsed.shouldHandle) {
+          if (shouldTransformChatMessage(messageText, chatData)) {
+            void ChatMessage.create({
+              ...chatData,
+              content: transformSpeech(messageText, chatData),
+              speaker: chatData?.speaker
+            }).catch((e: unknown) => {
+              error("Failed to create transformed chat message", e);
+            });
+
+            return false;
+          }
+
           return;
         }
 
@@ -192,7 +205,7 @@ async function createComfortChatMessages(blocks: ParsedChatBlock[], chatData: an
     if (block.kind === "plain") {
       await ChatMessage.create({
         ...chatData,
-        content: block.text,
+        content: transformSpeech(block.text, chatData),
         speaker: chatData?.speaker
       });
       continue;

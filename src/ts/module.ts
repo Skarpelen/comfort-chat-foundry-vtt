@@ -31,5 +31,5 @@ Hooks.once("init", () => {
 });
 
 Hooks.once("ready", () => {
-  debug("comfort-chat is ready and listening for /emm");
+  debug("comfort-chat is ready and listening for chat commands");
 });

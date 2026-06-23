@@ -13,10 +13,53 @@
     "commands": {
       "emm": {
         "description": "Roll20 style action message"
+      },
+      "accent": {
+        "description": "Set the active character accent"
+      },
+      "drunk": {
+        "description": "Set the active character drunk speech level"
       }
     },
     "notifications": {
-      "needText": "Please provide a message after {command}"
+      "needText": "Please provide a message after {command}",
+      "needActor": "Select a character first.",
+      "needAccent": "Use /ccaccent dwarf or /ccaccent none.",
+      "unknownAccent": "Unknown accent: {accent}.",
+      "accentSet": "Accent set to {accent}.",
+      "accentCleared": "Accent cleared.",
+      "needDrunkLevel": "Use /ccdrunk 0..5 or /ccdrunk none.",
+      "badDrunkLevel": "Drunk speech level must be an integer between 0 and 5.",
+      "drunkSet": "Drunk speech level set to {level}.",
+      "drunkCleared": "Drunk speech cleared."
+    },
+    "ui": {
+      "accent": {
+        "button": "Accent",
+        "label": "Accent",
+        "options": {
+          "none": "No accent",
+          "dwarf": "Dwarf"
+        }
+      },
+      "drunk": {
+        "button": "Drunk speech",
+        "label": "Drunk speech",
+        "options": {
+          "0": "0 - No effect",
+          "1": "1 - Rare slurs",
+          "2": "2 - Noticeable slurs",
+          "3": "3 - Frequent slurs",
+          "4": "4 - Heavy slurs",
+          "5": "5 - Barely readable"
+        }
+      }
+    },
+    "effects": {
+      "drunk": {
+        "name": "Drunk speech",
+        "nameWithLevel": "Drunk speech {level}"
+      }
     },
     "fallback": {
       "someone": "Someone"

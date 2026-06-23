@@ -13,10 +13,53 @@
     "commands": {
       "emm": {
         "description": "Сообщение действия в стиле Roll20"
+      },
+      "accent": {
+        "description": "Задать акцент активного персонажа"
+      },
+      "drunk": {
+        "description": "Задать уровень пьяной речи активного персонажа"
       }
     },
     "notifications": {
-      "needText": "Пожалуйста, укажите текст после {command}"
+      "needText": "Пожалуйста, укажите текст после {command}",
+      "needActor": "Сначала выберите персонажа.",
+      "needAccent": "Используйте /ccaccent dwarf или /ccaccent none.",
+      "unknownAccent": "Неизвестный акцент: {accent}.",
+      "accentSet": "Акцент задан: {accent}.",
+      "accentCleared": "Акцент сброшен.",
+      "needDrunkLevel": "Используйте /ccdrunk 0..5 или /ccdrunk none.",
+      "badDrunkLevel": "Уровень пьяной речи должен быть целым числом от 0 до 5.",
+      "drunkSet": "Уровень пьяной речи задан: {level}.",
+      "drunkCleared": "Пьяная речь сброшена."
+    },
+    "ui": {
+      "accent": {
+        "button": "Акцент",
+        "label": "Акцент",
+        "options": {
+          "none": "Без акцента",
+          "dwarf": "Дворфийский"
+        }
+      },
+      "drunk": {
+        "button": "Пьяная речь",
+        "label": "Пьяная речь",
+        "options": {
+          "0": "0 - Нет эффекта",
+          "1": "1 - Редкие искажения",
+          "2": "2 - Заметные искажения",
+          "3": "3 - Частое коверканье",
+          "4": "4 - Сильная пьяная речь",
+          "5": "5 - Почти нечитаемо"
+        }
+      }
+    },
+    "effects": {
+      "drunk": {
+        "name": "Пьяная речь",
+        "nameWithLevel": "Пьяная речь {level}"
+      }
     },
     "fallback": {
       "someone": "Кто-то"
