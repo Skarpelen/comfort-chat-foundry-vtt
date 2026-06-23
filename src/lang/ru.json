@@ -37,6 +37,7 @@
       "accent": {
         "button": "Акцент",
         "label": "Акцент",
+        "section": "Акценты",
         "options": {
           "none": "Без акцента",
           "dwarf": "Дворфийский"

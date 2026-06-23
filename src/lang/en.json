@@ -37,6 +37,7 @@
       "accent": {
         "button": "Accent",
         "label": "Accent",
+        "section": "Accents",
         "options": {
           "none": "No accent",
           "dwarf": "Dwarf"
