@@ -9,6 +9,11 @@
     - accent-demonic-suffix-5
     - accent-demonic-suffix-6
     - accent-demonic-suffix-7
+    - accent-demonic-suffix-8
+    - accent-demonic-suffix-9
+    - accent-demonic-suffix-10
+    - accent-demonic-suffix-11
+    - accent-demonic-suffix-12
   uppercase: true
   wordReplacements:
     accent-demonic-words-1: accent-demonic-words-replace-1
@@ -26,3 +31,23 @@
     accent-demonic-words-13: accent-demonic-words-replace-13
     accent-demonic-words-14: accent-demonic-words-replace-14
     accent-demonic-words-15: accent-demonic-words-replace-15
+    accent-demonic-words-16: accent-demonic-words-replace-16
+    accent-demonic-words-17: accent-demonic-words-replace-17
+    accent-demonic-words-18: accent-demonic-words-replace-18
+    accent-demonic-words-19: accent-demonic-words-replace-19
+    accent-demonic-words-20: accent-demonic-words-replace-20
+    accent-demonic-words-21: accent-demonic-words-replace-21
+    accent-demonic-words-22: accent-demonic-words-replace-22
+    accent-demonic-words-23: accent-demonic-words-replace-23
+    accent-demonic-words-24: accent-demonic-words-replace-24
+    accent-demonic-words-25: accent-demonic-words-replace-25
+    accent-demonic-words-26: accent-demonic-words-replace-26
+    accent-demonic-words-27: accent-demonic-words-replace-27
+    accent-demonic-words-28: accent-demonic-words-replace-28
+    accent-demonic-words-29: accent-demonic-words-replace-29
+    accent-demonic-words-30: accent-demonic-words-replace-30
+    accent-demonic-words-31: accent-demonic-words-replace-31
+    accent-demonic-words-32: accent-demonic-words-replace-32
+    accent-demonic-words-33: accent-demonic-words-replace-33
+    accent-demonic-words-34: accent-demonic-words-replace-34
+    accent-demonic-words-35: accent-demonic-words-replace-35
