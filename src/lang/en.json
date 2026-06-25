@@ -40,7 +40,10 @@
         "section": "Accents",
         "options": {
           "none": "No accent",
-          "dwarf": "Dwarf"
+          "dwarf": "Dwarf",
+          "oldcommon": "Old Common",
+          "pirate": "Pirate",
+          "demonic": "Demonic"
         }
       },
       "drunk": {
