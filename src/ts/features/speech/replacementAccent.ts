@@ -1,5 +1,10 @@
 export type ReplacementAccentData = Readonly<{
   id: string;
+  prefixes: readonly string[];
+  prefixChance: number;
+  suffixes: readonly string[];
+  suffixChance: number;
+  uppercase: boolean;
   wordReplacements: readonly ReplacementPair[];
 }>;
 
@@ -10,6 +15,11 @@ type ReplacementPair = Readonly<{
 
 type ReplacementAccentPrototype = Readonly<{
   id: string;
+  prefixes: readonly string[];
+  prefixChance: number;
+  suffixes: readonly string[];
+  suffixChance: number;
+  uppercase: boolean;
   wordReplacements: readonly [string, string][];
 }>;
 
@@ -44,13 +54,26 @@ export function parseFtl(text: string): Map<string, string> {
 
 export function parseReplacementAccentYaml(text: string): ReplacementAccentPrototype[] {
   const result: ReplacementAccentPrototype[] = [];
-  let current: { id?: string; replacements: [string, string][] } | undefined;
-  let inWordReplacements = false;
+  let current: {
+    id?: string;
+    prefixes: string[];
+    prefixChance: number;
+    replacements: [string, string][];
+    suffixes: string[];
+    suffixChance: number;
+    uppercase: boolean;
+  } | undefined;
+  let currentSection: "prefixes" | "suffixes" | "wordReplacements" | undefined;
 
   const pushCurrent = (): void => {
     if (current?.id) {
       result.push({
         id: current.id,
+        prefixes: current.prefixes,
+        prefixChance: current.prefixChance,
+        suffixes: current.suffixes,
+        suffixChance: current.suffixChance,
+        uppercase: current.uppercase,
         wordReplacements: current.replacements
       });
     }
@@ -66,8 +89,15 @@ export function parseReplacementAccentYaml(text: string): ReplacementAccentProto
 
     if (trimmed === "- type: accent") {
       pushCurrent();
-      current = { replacements: [] };
-      inWordReplacements = false;
+      current = {
+        prefixes: [],
+        prefixChance: 1,
+        replacements: [],
+        suffixes: [],
+        suffixChance: 1,
+        uppercase: false
+      };
+      currentSection = undefined;
       continue;
     }
 
@@ -80,17 +110,57 @@ export function parseReplacementAccentYaml(text: string): ReplacementAccentProto
       continue;
     }
 
-    if (trimmed === "wordReplacements:") {
-      inWordReplacements = true;
+    if (trimmed.startsWith("prefixChance:")) {
+      current.prefixChance = parseChance(trimmed.slice("prefixChance:".length).trim());
+      currentSection = undefined;
       continue;
     }
 
-    if (!inWordReplacements) {
+    if (trimmed.startsWith("suffixChance:")) {
+      current.suffixChance = parseChance(trimmed.slice("suffixChance:".length).trim());
+      currentSection = undefined;
+      continue;
+    }
+
+    if (trimmed.startsWith("uppercase:")) {
+      current.uppercase = trimmed.slice("uppercase:".length).trim().toLowerCase() === "true";
+      currentSection = undefined;
+      continue;
+    }
+
+    if (trimmed === "prefixes:") {
+      currentSection = "prefixes";
+      continue;
+    }
+
+    if (trimmed === "suffixes:") {
+      currentSection = "suffixes";
+      continue;
+    }
+
+    if (trimmed === "wordReplacements:") {
+      currentSection = "wordReplacements";
+      continue;
+    }
+
+    if (!currentSection) {
       continue;
     }
 
     if (!line.startsWith("    ")) {
-      inWordReplacements = false;
+      currentSection = undefined;
+      continue;
+    }
+
+    if (currentSection === "prefixes" || currentSection === "suffixes") {
+      if (trimmed.startsWith("- ")) {
+        const key = trimmed.slice(2).trim();
+
+        if (key) {
+          current[currentSection].push(key);
+        }
+      }
+
       continue;
     }
 
@@ -121,6 +191,12 @@ export function createReplacementAccentData(
   const result = new Map<string, ReplacementAccentData>();
 
   for (const prototype of parseReplacementAccentYaml(yaml)) {
+    const prefixes = prototype.prefixes
+      .map((key) => localizedStrings.get(key))
+      .filter((value): value is string => value != null && value.length > 0);
+    const suffixes = prototype.suffixes
+      .map((key) => localizedStrings.get(key))
+      .filter((value): value is string => value != null && value.length > 0);
     const wordReplacements: ReplacementPair[] = [];
 
     for (const [sourceKey, replacementKey] of prototype.wordReplacements) {
@@ -136,6 +212,11 @@ export function createReplacementAccentData(
 
     result.set(prototype.id, {
       id: prototype.id,
+      prefixes,
+      prefixChance: prototype.prefixChance,
+      suffixes,
+      suffixChance: prototype.suffixChance,
+      uppercase: prototype.uppercase,
       wordReplacements: wordReplacements.sort((left, right) =>
         right.source.length - left.source.length
       )
@@ -180,6 +261,18 @@ export function applyReplacementAccent(
     }
   }
 
+  if (accent.prefixes.length > 0 && Math.random() < accent.prefixChance) {
+    result = applyPrefix(result, pickRandom(accent.prefixes));
+  }
+
+  if (accent.suffixes.length > 0 && Math.random() < accent.suffixChance) {
+    result = `${result} ${pickRandom(accent.suffixes)}`;
+  }
+
+  if (accent.uppercase) {
+    result = result.toLocaleUpperCase();
+  }
+
   return result;
 }
 
@@ -197,8 +290,42 @@ function escapeRegExp(input: string): string {
   return input.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function parseChance(input: string): number {
+  const value = Number(input);
+
+  if (!Number.isFinite(value)) {
+    return 1;
+  }
+
+  return Math.min(1, Math.max(0, value));
+}
+
+function pickRandom(values: readonly string[]): string {
+  return values[Math.floor(Math.random() * values.length)] ?? "";
+}
+
+function applyPrefix(message: string, prefix: string): string {
+  if (!message || !prefix) {
+    return message;
+  }
+
+  if (isFirstWordAllUpperCase(message)) {
+    return `${prefix.toLocaleUpperCase()} ${message}`;
+  }
+
+  return capitalizeFirst(`${prefix} ${lowercaseFirst(message)}`);
+}
+
+function lowercaseFirst(input: string): string {
+  return input.length > 0 ? input[0].toLocaleLowerCase() + input.slice(1) : input;
+}
+
+function capitalizeFirst(input: string): string {
+  return input.length > 0 ? input[0].toLocaleUpperCase() + input.slice(1) : input;
+}
+
 function applySimpleCapitalization(source: string, replacement: string): string {
-  if (isAllUpperCase(source)) {
+  if (isAllUpperCase(source) && (source.length > 1 || replacement.length === 1)) {
     return replacement.toLocaleUpperCase();
   }
 
@@ -215,4 +342,10 @@ function isAllUpperCase(input: string): boolean {
   return letters.length > 0 && letters.every((character) =>
     character === character.toLocaleUpperCase()
   );
+}
+
+function isFirstWordAllUpperCase(input: string): boolean {
+  const firstWord = input.match(/^\S+/u)?.[0] ?? "";
+
+  return isAllUpperCase(firstWord);
 }

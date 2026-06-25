@@ -7,6 +7,8 @@ import demonicFtl from "./data/accents/demonic.ftl?raw";
 import demonicYaml from "./data/accents/demonic.yml?raw";
 import dwarfFtl from "./data/accents/dwarf.ftl?raw";
 import dwarfYaml from "./data/accents/dwarf.yml?raw";
+import northernFtl from "./data/accents/northern.ftl?raw";
+import northernYaml from "./data/accents/northern.yml?raw";
 import oldcommonFtl from "./data/accents/oldcommon.ftl?raw";
 import oldcommonYaml from "./data/accents/oldcommon.yml?raw";
 import pirateFtl from "./data/accents/pirate.ftl?raw";
@@ -16,6 +18,7 @@ const ACCENT_YAML = [
   dwarfYaml,
   oldcommonYaml,
   pirateYaml,
+  northernYaml,
   demonicYaml
 ].join("\n");
 
@@ -23,6 +26,7 @@ const ACCENT_FTL = [
   dwarfFtl,
   oldcommonFtl,
   pirateFtl,
+  northernFtl,
   demonicFtl
 ].join("\n");
 

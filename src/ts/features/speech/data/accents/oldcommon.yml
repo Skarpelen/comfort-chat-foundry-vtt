@@ -1,5 +1,48 @@
 - type: accent
   id: oldcommon
+  prefixChance: 0.4
+  prefixes:
+    - accent-medieval-prefix-1
+    - accent-medieval-prefix-2
+    - accent-medieval-prefix-3
+    - accent-medieval-prefix-4
+    - accent-medieval-prefix-5
+    - accent-medieval-prefix-6
+    - accent-medieval-prefix-7
+    - accent-medieval-prefix-8
+    - accent-medieval-prefix-9
+    - accent-medieval-prefix-10
+    - accent-medieval-prefix-11
+    - accent-medieval-prefix-12
+    - accent-medieval-prefix-13
+    - accent-medieval-prefix-14
+    - accent-medieval-prefix-15
+    - accent-medieval-prefix-16
+    - accent-medieval-prefix-17
+    - accent-medieval-prefix-18
+    - accent-medieval-prefix-19
+    - accent-medieval-prefix-20
+    - accent-medieval-prefix-21
+    - accent-medieval-prefix-22
+    - accent-medieval-prefix-23
+    - accent-medieval-prefix-24
+    - accent-medieval-prefix-25
+    - accent-medieval-prefix-26
+    - accent-medieval-prefix-27
+    - accent-medieval-prefix-28
+    - accent-medieval-prefix-29
+    - accent-medieval-prefix-30
+    - accent-medieval-prefix-31
+    - accent-medieval-prefix-32
+    - accent-medieval-prefix-33
+    - accent-medieval-prefix-34
+    - accent-medieval-prefix-35
+    - accent-medieval-prefix-36
+    - accent-medieval-prefix-37
+    - accent-medieval-prefix-38
+    - accent-medieval-prefix-39
+    - accent-medieval-prefix-40
+    - accent-medieval-prefix-41
   wordReplacements:
     accent-medieval-words-1: accent-medieval-words-replace-1
     accent-medieval-words-2: accent-medieval-words-replace-2
@@ -235,5 +278,3 @@
     accent-medieval-words-233: accent-medieval-words-replace-233
     accent-medieval-words-234: accent-medieval-words-replace-234
     accent-medieval-words-235: accent-medieval-words-replace-235
-
-- type: accent

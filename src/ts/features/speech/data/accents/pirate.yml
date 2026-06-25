@@ -1,4 +1,11 @@
+- type: accent
   id: pirate
+  prefixChance: 0.5
+  prefixes:
+    - accent-pirate-prefix-1
+    - accent-pirate-prefix-2
+    - accent-pirate-prefix-3
+    - accent-pirate-prefix-4
   wordReplacements:
     accent-pirate-replaced-1: accent-pirate-replacement-1
     accent-pirate-replaced-2: accent-pirate-replacement-2
@@ -32,5 +39,3 @@
     accent-pirate-replaced-30: accent-pirate-replacement-30
     accent-pirate-replaced-31: accent-pirate-replacement-31
     accent-pirate-replaced-32: accent-pirate-replacement-32
-
-- type: accent

@@ -1,4 +1,15 @@
+- type: accent
   id: demonic
+  suffixChance: 0.15
+  suffixes:
+    - accent-demonic-suffix-1
+    - accent-demonic-suffix-2
+    - accent-demonic-suffix-3
+    - accent-demonic-suffix-4
+    - accent-demonic-suffix-5
+    - accent-demonic-suffix-6
+    - accent-demonic-suffix-7
+  uppercase: true
   wordReplacements:
     accent-demonic-words-1: accent-demonic-words-replace-1
     accent-demonic-words-2: accent-demonic-words-replace-2
