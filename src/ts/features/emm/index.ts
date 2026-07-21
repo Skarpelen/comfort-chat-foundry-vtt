@@ -6,10 +6,12 @@ import { shouldTransformChatMessage, transformSpeech } from "../speech";
 const EMM_COMMANDS: string[] = ["/emm", "/em", "/me", "/emote"];
 const DESC_COMMAND = "/desc";
 const EMPTY_LINE_SEPARATOR = /\r?\n[ \t]*\r?\n+/;
+const DESC_BLOCK_SEPARATOR = /(?:\r?\n[ \t]*){2,}(?=\/desc(?:[ \t]+|\r?\n|$))/i;
 
 type ParsedChatBlock =
   | { kind: "plain"; text: string }
-  | { kind: "emm"; text: string };
+  | { kind: "emm"; text: string }
+  | { kind: "desc"; text: string };
 
 export function onInitHandle(_module: foundry.packages.Module): void {
   debug("EMM feature initializing");
@@ -24,7 +26,7 @@ export function onInitHandle(_module: foundry.packages.Module): void {
         description: descTmpl,
         iconClass: "fa-bullhorn",
         shouldDisplayToChat: false,
-        invokeOnCommand: (_chatLog: ChatLog, messageText: string, chatData: any) => {
+        invokeOnCommand: (chatLog: ChatLog, messageText: string, chatData: any) => {
           const fullText = `${commandKey} ${messageText ?? ""}`;
           const parsed = parseComfortChatInput(fullText);
 
@@ -33,7 +35,7 @@ export function onInitHandle(_module: foundry.packages.Module): void {
             return "";
           }
 
-          void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+          void createComfortChatMessages(chatLog, parsed.blocks, chatData).catch((e) => {
             error("Failed to create comfort chat messages", e);
           });
 
@@ -55,7 +57,7 @@ export const HOOKS_DEFINITIONS: HookDefinitions = {
   on: [
     {
       name: "chatMessage" as Hooks.HookName,
-      callback: (_chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
+      callback: (chatLog: ChatLog, messageText: string, chatData: any): boolean | void => {
         const parsed = parseComfortChatInput(messageText);
 
         if (!parsed.shouldHandle) {
@@ -83,7 +85,7 @@ export const HOOKS_DEFINITIONS: HookDefinitions = {
           return false;
         }
 
-        void createComfortChatMessages(parsed.blocks, chatData).catch((e) => {
+        void createComfortChatMessages(chatLog, parsed.blocks, chatData).catch((e) => {
           error("Failed to create comfort chat messages", e);
         });
 
@@ -147,20 +149,21 @@ function parseComfortChatInput(messageText: string): {
   emptyCommand?: string;
 } {
   const source = messageText ?? "";
-  const firstLine = source.trimStart().toLowerCase();
 
-  if (firstLine === DESC_COMMAND || firstLine.startsWith(`${DESC_COMMAND} `)) {
+  if (startsWithDescCommand(source)) {
     return { shouldHandle: false, blocks: [] };
   }
 
-  const rawBlocks = source
+  const descBlock = extractDescBlock(source);
+  const sourceBeforeDesc = descBlock?.sourceBeforeDesc ?? source;
+  const rawBlocks = sourceBeforeDesc
     .split(EMPTY_LINE_SEPARATOR)
     .map((block) => block.trim())
     .filter((block) => block.length > 0);
 
   const hasEmmBlock = rawBlocks.some((block) => findEmmCommand(block) != null);
 
-  if (!hasEmmBlock) {
+  if (!hasEmmBlock && !descBlock) {
     return { shouldHandle: false, blocks: [] };
   }
 
@@ -189,7 +192,34 @@ function parseComfortChatInput(messageText: string): {
     }
   }
 
+  if (descBlock) {
+    blocks.push({ kind: "desc", text: descBlock.text });
+  }
+
   return { shouldHandle: true, blocks };
+}
+
+function startsWithDescCommand(text: string): boolean {
+  const trimmed = text.trimStart().toLowerCase();
+
+  return trimmed === DESC_COMMAND || /^\/desc(?:[ \t]+|\r?\n)/.test(trimmed);
+}
+
+function extractDescBlock(source: string):
+  | { sourceBeforeDesc: string; text: string }
+  | undefined {
+  const separator = DESC_BLOCK_SEPARATOR.exec(source);
+
+  if (!separator) {
+    return undefined;
+  }
+
+  const descStart = separator.index + separator[0].length;
+
+  return {
+    sourceBeforeDesc: source.slice(0, separator.index),
+    text: source.slice(descStart).trim()
+  };
 }
 
 function findEmmCommand(text: string): string | undefined {
@@ -200,8 +230,17 @@ function findEmmCommand(text: string): string | undefined {
   );
 }
 
-async function createComfortChatMessages(blocks: ParsedChatBlock[], chatData: any): Promise<void> {
+async function createComfortChatMessages(
+  chatLog: ChatLog,
+  blocks: ParsedChatBlock[],
+  chatData: any
+): Promise<void> {
   for (const block of blocks) {
+    if (block.kind === "desc") {
+      await (chatLog as any).processMessage(block.text, { speaker: chatData?.speaker });
+      continue;
+    }
+
     if (block.kind === "plain") {
       await ChatMessage.create({
         ...chatData,
